@@ -4,15 +4,27 @@ A local **stdio** MCP server providing natural-language access to the City of Ch
 
 ## What it does
 
-This server provides access to Chattanooga government information through three main tools:
-- **News/announcements** via RSS feed parsing
+This server provides access to Chattanooga government information through four tools:
+- **News articles** via the sitemap's `latest-news` section
+- **Events/calendar** via RSS feed parsing
 - **Site navigation** via sitemap exploration  
 - **Page content** via web scraping (Firecrawl or fallback fetch)
 
 ## Available Tools
 
 ### `search_news`
-Search news and announcements from the official RSS feed.
+Search city news articles, discovered from the sitemap's
+`/stay-informed/latest-news/` section (newest first). Returns article URLs,
+slug-derived titles, and last-modified dates. Use `get_page` for full text and
+the exact headline.
+- `query` (optional): Filter by keyword on title or URL
+- `limit` (default: 15): Maximum results to return
+
+> Note: the city's RSS feed (`rss.xml`) is actually an **events/calendar** feed,
+> not news — so news is sourced from the sitemap instead. See `search_events`.
+
+### `search_events`
+Search events and calendar items from the chattanooga.gov RSS feed.
 - `query` (optional): Filter results by keyword
 - `limit` (default: 15): Maximum results to return
 

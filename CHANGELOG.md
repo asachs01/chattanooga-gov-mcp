@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+- `search_news` now sources real news articles from the sitemap's
+  `/stay-informed/latest-news/` section (newest first) instead of the RSS feed.
+  The RSS feed (`rss.xml`) is actually the city's events/calendar feed, so it
+  returned no news.
+
+### Added
+- `search_events` tool exposing the RSS events/calendar feed (the previous
+  `search_news` behavior, correctly renamed).
+
 ## [0.1.0] - 2026-06-05
 
 ### Added

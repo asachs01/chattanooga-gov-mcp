@@ -12,6 +12,7 @@ import { z } from 'zod';
 
 import { parseRssFeed } from './rss-parser.js';
 import { rankNewsItems, NewsItem } from './news-rank.js';
+import { fetchNewsArticles } from './news.js';
 import { parseSitemap, filterSitemapUrls, SitemapUrl } from './sitemap-parser.js';
 import { scrapePage, ScrapedPage } from './page-scraper.js';
 import { FetchError } from './fetch-util.js';
@@ -21,6 +22,11 @@ const SITEMAP_URL = 'https://chattanooga.gov/sitemap.xml';
 
 // Tool schemas
 const SearchNewsSchema = z.object({
+  query: z.string().optional(),
+  limit: z.number().default(15),
+});
+
+const SearchEventsSchema = z.object({
   query: z.string().optional(),
   limit: z.number().default(15),
 });
@@ -60,13 +66,33 @@ class ChattanoogaGovServer {
         tools: [
           {
             name: 'search_news',
-            description: 'Search news and announcements from chattanooga.gov RSS feed',
+            description:
+              'Search City of Chattanooga news articles (from chattanooga.gov/stay-informed/latest-news, discovered via the sitemap). Returns article URLs, slug-derived titles, and last-modified dates, newest first. Use get_page to fetch an article\'s full text and exact headline.',
             inputSchema: {
               type: 'object',
               properties: {
                 query: {
                   type: 'string',
-                  description: 'Optional search query to filter news items',
+                  description: 'Optional search query to filter news articles by title or URL',
+                },
+                limit: {
+                  type: 'number',
+                  description: 'Maximum number of results to return (default: 15)',
+                  default: 15,
+                },
+              },
+            },
+          },
+          {
+            name: 'search_events',
+            description:
+              'Search events and calendar items from the chattanooga.gov RSS feed (rss.xml is the city events/calendar feed). Returns event titles, links, dates, and summaries.',
+            inputSchema: {
+              type: 'object',
+              properties: {
+                query: {
+                  type: 'string',
+                  description: 'Optional search query to filter events',
                 },
                 limit: {
                   type: 'number',
@@ -122,6 +148,9 @@ class ChattanoogaGovServer {
           case 'search_news':
             return await this.handleSearchNews(request.params.arguments);
 
+          case 'search_events':
+            return await this.handleSearchEvents(request.params.arguments);
+
           case 'list_pages':
             return await this.handleListPages(request.params.arguments);
 
@@ -155,10 +184,7 @@ class ChattanoogaGovServer {
     const { query, limit } = SearchNewsSchema.parse(args);
 
     try {
-      const newsItems = await parseRssFeed(RSS_URL);
-      const filteredItems = query
-        ? rankNewsItems(newsItems, query).slice(0, limit)
-        : newsItems.slice(0, limit);
+      const articles = await fetchNewsArticles(SITEMAP_URL, query, limit);
 
       return {
         content: [
@@ -166,8 +192,8 @@ class ChattanoogaGovServer {
             type: 'text',
             text: JSON.stringify({
               query,
-              count: filteredItems.length,
-              items: filteredItems,
+              count: articles.length,
+              items: articles,
             }, null, 2),
           },
         ],
@@ -178,6 +204,40 @@ class ChattanoogaGovServer {
           {
             type: 'text',
             text: `Error fetching news: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          },
+        ],
+        isError: true,
+      };
+    }
+  }
+
+  private async handleSearchEvents(args: any) {
+    const { query, limit } = SearchEventsSchema.parse(args);
+
+    try {
+      const events = await parseRssFeed(RSS_URL);
+      const filteredEvents = query
+        ? rankNewsItems(events, query).slice(0, limit)
+        : events.slice(0, limit);
+
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify({
+              query,
+              count: filteredEvents.length,
+              items: filteredEvents,
+            }, null, 2),
+          },
+        ],
+      };
+    } catch (error) {
+      return {
+        content: [
+          {
+            type: 'text',
+            text: `Error fetching events: ${error instanceof Error ? error.message : 'Unknown error'}`,
           },
         ],
         isError: true,
