@@ -1,0 +1,35 @@
+{
+  "name": "chattanooga-gov-mcp",
+  "version": "0.1.0",
+  "description": "MCP server for accessing City of Chattanooga government information via web scraping",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "chattanooga-gov-mcp": "dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "start": "node dist/index.js",
+    "test": "echo \"No tests yet\" && exit 1"
+  },
+  "keywords": [
+    "mcp",
+    "chattanooga",
+    "government",
+    "scraper"
+  ],
+  "author": "Aaron Sachs <aaron@wyretechnology.com>",
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^0.7.0",
+    "turndown": "^7.2.0",
+    "fast-xml-parser": "^4.4.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^18.19.0",
+    "@types/turndown": "^5.0.5",
+    "typescript": "^5.5.0"
+  }
+}
